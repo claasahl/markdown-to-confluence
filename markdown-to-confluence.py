@@ -40,7 +40,7 @@ def get_environ_headers(prefix):
 
 def get_last_modified(repo):
     """Returns the paths to the last modified files in the provided Git repo
-    
+
     Arguments:
         repo {git.Repo} -- The repository object
     """
@@ -64,7 +64,7 @@ def get_slug(filepath, prefix=''):
     slug = slug.replace('-', '_')
     if prefix:
         slug = '{}_{}'.format(prefix, slug)
-    return slug
+    return slug.lower()
 
 
 def parse_args():
@@ -153,7 +153,7 @@ def parse_args():
 
 def deploy_file(post_path, args, confluence):
     """Creates or updates a file in Confluence
-    
+
     Arguments:
         post_path {str} -- The absolute path of the post to deploy to Confluence
         args {argparse.Arguments} -- The parsed command-line arguments
