@@ -1,0 +1,16 @@
+version: "3.3"
+
+services:
+  markdown-to-confluence:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: markdown-to-confluence
+    env_file:
+      - .env
+    volumes:
+      - tmp-volume:/tmp
+      - .:/usr/src/app/git
+
+volumes:
+  tmp-volume:
