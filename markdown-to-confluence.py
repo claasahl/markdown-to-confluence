@@ -2,7 +2,6 @@ import argparse
 import logging
 import os
 import requests
-import git
 import sys
 
 from confluence import Confluence
@@ -38,19 +37,6 @@ def get_environ_headers(prefix):
     return headers
 
 
-def get_last_modified(repo):
-    """Returns the paths to the last modified files in the provided Git repo
-
-    Arguments:
-        repo {git.Repo} -- The repository object
-    """
-    changed_files = repo.git.diff('HEAD~1..HEAD', name_only=True).split()
-    for filepath in changed_files:
-        if not filepath.startswith('content/'):
-            changed_files.remove(filepath)
-    return changed_files
-
-
 def get_slug(filepath, prefix=''):
     """Returns the slug for a given filepath
     
@@ -70,12 +56,6 @@ def get_slug(filepath, prefix=''):
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Converts and deploys a markdown post to Confluence')
-    parser.add_argument(
-        '--git',
-        dest='git',
-        default=os.getcwd(),
-        help='The path to your Git repository (default: {}))'.format(
-            os.getcwd()))
     parser.add_argument(
         '--api_url',
         dest='api_url',
@@ -123,7 +103,7 @@ def parse_args():
         type=str,
         nargs='*',
         help=
-        'Individual files to deploy to Confluence (takes precendence over --git)'
+        'Individual files to deploy to Confluence'
     )
 
     args = parser.parse_args()
@@ -199,20 +179,11 @@ def main():
                             headers=args.headers,
                             dry_run=args.dry_run)
 
-    if args.posts:
-        changed_posts = [os.path.abspath(post) for post in args.posts]
-        for post_path in changed_posts:
-            if not os.path.exists(post_path) or not os.path.isfile(post_path):
-                log.error('File doesn\'t exist: {}'.format(post_path))
-                sys.exit(1)
-    else:
-        repo = git.Repo(args.git)
-        changed_posts = [
-            os.path.join(args.git, post) for post in get_last_modified(repo)
-        ]
-    if not changed_posts:
-        log.info('No post created/modified in the latest commit')
-        return
+    changed_posts = [os.path.abspath(post) for post in args.posts]
+    for post_path in changed_posts:
+        if not os.path.exists(post_path) or not os.path.isfile(post_path):
+            log.error('File doesn\'t exist: {}'.format(post_path))
+            sys.exit(1)
 
     for post in changed_posts:
         log.info('Attempting to deploy {}'.format(post))

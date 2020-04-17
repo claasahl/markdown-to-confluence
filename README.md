@@ -30,13 +30,10 @@ usage: markdown-to-confluence.py [-h] [--git GIT] [--api_url API_URL]
 Converts and deploys a markdown post to Confluence
 
 positional arguments:
-  posts                 Individual files to deploy to Confluence (takes
-                        precendence over --git)
+  posts                 Individual files to deploy to Confluence
 
 optional arguments:
   -h, --help            show this help message and exit
-  --git GIT             The path to your Git repository (default:
-                        /Users/jwright/src/journal-to-confluence))
   --api_url API_URL     The URL to the Confluence API (e.g.
                         https://wiki.example.com/rest/api/)
   --username USERNAME   The username for authentication to Confluence
@@ -51,20 +48,6 @@ optional arguments:
                         The Confluence ID of the parent page to place posts
                         under (default: env('CONFLUENCE_ANCESTOR_ID'))
 
-```
-
-## Deploying a Post
-
-There are two ways to deploy a post:
-
-### Syncing from a Git Repository
-
-This project was originally created to keep an instance of Journal in sync with a Confluence instance. To that end, this project is able to be run as part of a CI/CD pipeline, taking the Markdown files modified in the latest commit and syncing them to the upstream Confluence instance.
-
-To enable this as part of your CI/CD pipeline, run `markdown-to-confluence`, providing the `--git` flag:
-
-```
-markdown-to-confluence.py --git /path/to/your/repo
 ```
 
 ### Deploying Posts On-Demand
