@@ -5,8 +5,6 @@ import yaml
 
 from urllib.parse import urlparse
 
-YAML_BOUNDARY = '---'
-
 
 def parse(post_path):
     """Parses the metadata and content from the provided post.
@@ -14,20 +12,10 @@ def parse(post_path):
     Arguments:
         post_path {str} -- The absolute path to the Markdown post
     """
-    raw_yaml = ''
     markdown = ''
-    in_yaml = True
     with open(post_path, 'r') as post:
         for line in post.readlines():
-            # Check if this is the ending tag
-            if line.strip() == YAML_BOUNDARY:
-                if in_yaml and raw_yaml:
-                    in_yaml = False
-                    continue
-            if in_yaml:
-                raw_yaml += line
-            else:
-                markdown += line
+             markdown += line
     markdown = markdown.strip()
     return markdown
 
@@ -37,7 +25,7 @@ def convtoconf(markdown):
     content_html = mistune.markdown(markdown, renderer=renderer)
     page_html = renderer.layout(content_html)
 
-    return page_html, renderer.attachments
+    return content_html, renderer.attachments
 
 
 class ConfluenceRenderer(mistune.Renderer):
