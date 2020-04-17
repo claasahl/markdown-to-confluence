@@ -115,8 +115,8 @@ class Confluence():
                              data=data,
                              files=files)
 
-    def put(self, path=None, params=None, data=None):
-        return self._request(method='PUT', path=path, params=params, data=data)
+    def put(self, path=None, params=None, data=None, files=None):
+        return self._request(method='PUT', path=path, params=params, data=data, files=files)
 
     def exists(self, space=None, title=None, ancestor_id=None):
         """Returns the Confluence page that matches the provided metdata, if it exists.
@@ -195,7 +195,7 @@ class Confluence():
         log.info(
             'Uploading attachment {attachment_path} to post {post_id}'.format(
                 attachment_path=attachment_path, post_id=post_id))
-        self.post(path=path,
+        self.put(path=path,
                   params={'allowDuplicated': 'true'},
                   files={'file': open(attachment_path, 'rb')})
         log.info('Uploaded {} to post ID {}'.format(attachment_path, post_id))

@@ -58,6 +58,13 @@ def parse_args():
         'The title of the Confluence page (default: env(\'CONFLUENCE_TITLE\'))'
     )
     parser.add_argument(
+        '--path',
+        dest='path',
+        default=os.getenv('CONFLUENCE_PATH'),
+        help=
+        'The title of the Confluence page (default: env(\'CONFLUENCE_PATH\'))'
+    )
+    parser.add_argument(
         '--ancestor_id',
         dest='ancestor_id',
         default=os.getenv('CONFLUENCE_ANCESTOR_ID'),
@@ -107,9 +114,8 @@ def deploy_file(post_path, args, confluence):
     # Normalize the content into whatever format Confluence expects
     html, attachments = convtoconf(markdown)
 
-    static_path = os.path.join('.', 'static')
     for i, attachment in enumerate(attachments):
-        attachments[i] = os.path.join(static_path, attachment.lstrip('/'))
+        attachments[i] = os.path.join(args.path, attachment.lstrip('/'))
 
     title = args.title
     ancestor_id = args.ancestor_id
@@ -141,7 +147,7 @@ def main():
                             username=args.username,
                             password=args.password)
 
-    changed_posts = [os.path.abspath(post) for post in args.posts]
+    changed_posts = [os.path.abspath(os.path.join(args.path, post)) for post in args.posts]
     for post_path in changed_posts:
         if not os.path.exists(post_path) or not os.path.isfile(post_path):
             log.error('File doesn\'t exist: {}'.format(post_path))
