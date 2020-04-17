@@ -28,17 +28,12 @@ def parse(post_path):
                 raw_yaml += line
             else:
                 markdown += line
-    front_matter = yaml.load(raw_yaml, Loader=yaml.SafeLoader)
     markdown = markdown.strip()
-    return front_matter, markdown
+    return markdown
 
 
-def convtoconf(markdown, front_matter={}):
-    if front_matter is None:
-        front_matter = {}
-
-    author_keys = front_matter.get('author_keys', [])
-    renderer = ConfluenceRenderer(authors=author_keys)
+def convtoconf(markdown):
+    renderer = ConfluenceRenderer()
     content_html = mistune.markdown(markdown, renderer=renderer)
     page_html = renderer.layout(content_html)
 
@@ -46,11 +41,9 @@ def convtoconf(markdown, front_matter={}):
 
 
 class ConfluenceRenderer(mistune.Renderer):
-    def __init__(self, authors=[]):
+    def __init__(self):
         self.attachments = []
-        if authors is None:
-            authors = []
-        self.authors = authors
+        self.authors = []
         self.has_toc = False
         super().__init__()
 

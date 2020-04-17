@@ -105,34 +105,18 @@ def parse_args():
         'The Confluence space where the post should reside (default: env(\'CONFLUENCE_SPACE\'))'
     )
     parser.add_argument(
+        '--title',
+        dest='title',
+        default=os.getenv('CONFLUENCE_TITLE'),
+        help=
+        'The title of the Confluence page (default: env(\'CONFLUENCE_TITLE\'))'
+    )
+    parser.add_argument(
         '--ancestor_id',
         dest='ancestor_id',
         default=os.getenv('CONFLUENCE_ANCESTOR_ID'),
         help=
         'The Confluence ID of the parent page to place posts under (default: env(\'CONFLUENCE_ANCESTOR_ID\'))'
-    )
-    parser.add_argument(
-        '--global_label',
-        dest='global_label',
-        default=os.getenv('CONFLUENCE_GLOBAL_LABEL'),
-        help=
-        'The label to apply to every post for easier discovery in Confluence (default: env(\'CONFLUENCE_GLOBAL_LABEL\'))'
-    )
-    parser.add_argument(
-        '--header',
-        metavar='HEADER',
-        dest='headers',
-        action='append',
-        default=get_environ_headers('CONFLUENCE_HEADER_'),
-        help=
-        'Extra header to include in the request when sending HTTP to a server. May be specified multiple times. (default: env(\'CONFLUENCE_HEADER_<NAME>\'))'
-    )
-    parser.add_argument(
-        '--dry-run',
-        dest='dry_run',
-        action='store_true',
-        help=
-        'Print requests that would be sent- don\'t actually make requests against Confluence (note: we return empty responses, so this might impact accuracy)'
     )
     parser.add_argument(
         'posts',
@@ -167,42 +151,23 @@ def deploy_file(post_path, args, confluence):
         return
 
     try:
-        front_matter, markdown = parse(post_path)
+        markdown = parse(post_path)
     except Exception as e:
         log.error(
             'Unable to process {}. Normally not a problem, but here\'s the error we received: {}'
             .format(post_path, e))
         return
 
-    if 'wiki' not in front_matter or not front_matter['wiki'].get('share'):
-        log.info(
-            'Post {} not set to be uploaded to Confluence'.format(post_path))
-        return
-
-    front_matter['author_keys'] = []
-    authors = front_matter.get('authors', [])
-    for author in authors:
-        confluence_author = confluence.get_author(author)
-        if not confluence_author:
-            continue
-        front_matter['author_keys'].append(confluence_author['userKey'])
-
     # Normalize the content into whatever format Confluence expects
-    html, attachments = convtoconf(markdown, front_matter=front_matter)
+    html, attachments = convtoconf(markdown)
 
     static_path = os.path.join(args.git, 'static')
     for i, attachment in enumerate(attachments):
         attachments[i] = os.path.join(static_path, attachment.lstrip('/'))
 
-    slug_prefix = '_'.join(author.lower() for author in authors)
-    post_slug = get_slug(post_path, prefix=slug_prefix)
-
-    ancestor_id = front_matter['wiki'].get('ancestor_id', args.ancestor_id)
-    space = front_matter['wiki'].get('space', args.space)
-
-    tags = front_matter.get('tags', [])
-    if args.global_label:
-        tags.append(args.global_label)
+    title = args.title
+    ancestor_id = args.ancestor_id
+    space = args.space
 
     page = confluence.exists(slug=post_slug,
                              ancestor_id=ancestor_id,
@@ -210,8 +175,7 @@ def deploy_file(post_path, args, confluence):
     if page:
         confluence.update(page['id'],
                           content=html,
-                          title=front_matter['title'],
-                          tags=tags,
+                          title=title,
                           slug=post_slug,
                           space=space,
                           ancestor_id=ancestor_id,
@@ -219,8 +183,7 @@ def deploy_file(post_path, args, confluence):
                           attachments=attachments)
     else:
         confluence.create(content=html,
-                          title=front_matter['title'],
-                          tags=tags,
+                          title=title,
                           slug=post_slug,
                           space=space,
                           ancestor_id=ancestor_id,

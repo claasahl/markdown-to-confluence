@@ -2,7 +2,7 @@
 
 Converts and deploys a Markdown file to Confluence.
 
-This project was created to sync [Journal](https://duo-labs.github.io/journal/) posts to Confluence as part of the CI process. However, it's able to more generally handle Markdown files that have front-matter at the top, such as those used in Hugo, Jeykll, etc.
+This project was created to sync [Journal](https://duo-labs.github.io/journal/) posts to Confluence as part of the CI process. 
 
 # Installation
 
@@ -45,24 +45,12 @@ optional arguments:
                         (default: env('CONFLUENCE_PASSWORD'))
   --space SPACE         The Confluence space where the post should reside
                         (default: env('CONFLUENCE_SPACE'))
+  --title TITLE         The title of the Confluence page
+                        (default: env('CONFLUENCE_TITLE'))                
   --ancestor_id ANCESTOR_ID
                         The Confluence ID of the parent page to place posts
                         under (default: env('CONFLUENCE_ANCESTOR_ID'))
-  --header HEADER       Extra header to include in the request when sending
-                        HTTP to a server. May be specified multiple times.
-                        (default: env('CONFLUENCE_HEADER_<NAME>'))
-  --dry-run             Print requests that would be sent- don't actually make
-                        requests against Confluence (note: we return empty
-                        responses, so this might impact accuracy)
-```
 
-## What Posts are Deployed
-
-This project assumes that the Markdown files being processed have YAML formatted front-matter at the top. In order for a file to be processed, we expect the following front-matter to be present:
-
-```yaml
-wiki:
-    share: true
 ```
 
 ## Deploying a Post

@@ -105,8 +105,7 @@ class TestConvertParse(unittest.TestCase):
         with open(self.post_path, 'w') as f:
             f.write(post)
 
-        front_matter, markdown = parse(self.post_path)
-        self.assertEqual(front_matter, self.want_yaml)
+        markdown = parse(self.post_path)
         self.assertEqual(markdown, self.want_markdown)
 
     def test_two_yaml_boundaries(self):
@@ -120,6 +119,5 @@ class TestConvertParse(unittest.TestCase):
         with open(self.post_path, 'w') as f:
             f.write(post)
 
-        front_matter, markdown = parse(self.post_path)
-        self.assertEqual(front_matter, self.want_yaml)
+        markdown = parse(self.post_path)
         self.assertEqual(markdown, self.want_markdown)
