@@ -37,22 +37,6 @@ def get_environ_headers(prefix):
     return headers
 
 
-def get_slug(filepath, prefix=''):
-    """Returns the slug for a given filepath
-    
-    Arguments:
-        filepath {str} -- The filepath for the post
-        prefix {str} -- Any prefixes to the slug
-    """
-    slug, _ = os.path.splitext(os.path.basename(filepath))
-    # Confluence doesn't support searching for labels with a "-",
-    # so we need to adjust it.
-    slug = slug.replace('-', '_')
-    if prefix:
-        slug = '{}_{}'.format(prefix, slug)
-    return slug.lower()
-
-
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Converts and deploys a markdown post to Confluence')
@@ -149,14 +133,13 @@ def deploy_file(post_path, args, confluence):
     ancestor_id = args.ancestor_id
     space = args.space
 
-    page = confluence.exists(slug=post_slug,
+    page = confluence.exists(title=title,
                              ancestor_id=ancestor_id,
                              space=space)
     if page:
         confluence.update(page['id'],
                           content=html,
                           title=title,
-                          slug=post_slug,
                           space=space,
                           ancestor_id=ancestor_id,
                           page=page,
@@ -164,7 +147,6 @@ def deploy_file(post_path, args, confluence):
     else:
         confluence.create(content=html,
                           title=title,
-                          slug=post_slug,
                           space=space,
                           ancestor_id=ancestor_id,
                           attachments=attachments)

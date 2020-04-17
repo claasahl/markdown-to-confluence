@@ -143,23 +143,23 @@ class Confluence():
     def put(self, path=None, params=None, data=None):
         return self._request(method='PUT', path=path, params=params, data=data)
 
-    def exists(self, space=None, slug=None, ancestor_id=None):
+    def exists(self, space=None, title=None, ancestor_id=None):
         """Returns the Confluence page that matches the provided metdata, if it exists.
 
         Specifically, this leverages a Confluence Query Language (CQL) query
-        against the Confluence API. We assume that each slug is unique, at
+        against the Confluence API. We assume that each title is unique, at
         least to the provided space/ancestor_id.
         
         Arguments:
             space {str} -- The Confluence space to use for filtering posts
-            slug {str} -- The page slug
+            title {str} -- The page title
             ancestor_id {str} -- The ID of the parent page
         """
-        self._require_kwargs({'slug': slug})
+        self._require_kwargs({'title': title})
 
         cql_args = []
-        if slug:
-            cql_args.append('label={}'.format(slug))
+        if title:
+            cql_args.append('title={}'.format(title))
         if ancestor_id:
             cql_args.append('ancestor={}'.format(ancestor_id))
         if space:
@@ -172,49 +172,6 @@ class Confluence():
         if not response.get('size'):
             return None
         return response['results'][0]
-
-    def create_labels(self, page_id=None, slug=None, tags=[]):
-        """Creates labels for the page to both assist with searching as well
-        as categorization.
-
-        We specifically require a slug to be provided, since this is how we
-        determine if a page exists. Any other tags are optional.
-        
-        Keyword Arguments:
-            page_id {str} -- The ID of the existing page to which the label should apply
-            slug {str} -- The page slug to use as the label value
-            tags {list(str)} -- Any other tags to apply to the post
-        """
-        labels = [{'prefix': DEFAULT_LABEL_PREFIX, 'name': slug}]
-
-        if tags is None:
-            tags = []
-        for tag in tags:
-            labels.append({'prefix': DEFAULT_LABEL_PREFIX, 'name': tag})
-        path = 'content/{page_id}/label'.format(page_id=page_id)
-        response = self.post(path=path, data=labels)
-
-        # Do a sanity check to ensure that the label for the slug appears in
-        # the results, since that's needed for us to find the page later.
-        labels = response.get('results', [])
-        if not labels:
-            log.error(
-                'No labels found after attempting to update page {}'.format(
-                    slug))
-            log.error('Here\'s the response we got:\n{}'.format(response))
-            return labels
-
-        if not any(label['name'] == slug for label in labels):
-            log.error(
-                'Returned labels missing the expected slug: {}'.format(slug))
-            log.error('Here are the labels we got: {}'.format(labels))
-            return labels
-
-        log.info(
-            'Created the following labels for page {slug}: {labels}'.format(
-                slug=slug,
-                labels=', '.join(label['name'] for label in labels)))
-        return labels
 
     def _create_page_payload(self,
                              content=None,
@@ -287,8 +244,6 @@ class Confluence():
                space=None,
                title=None,
                ancestor_id=None,
-               slug=None,
-               tags=None,
                attachments=None,
                type='page'):
         """Creates a new page with the provided content.
@@ -301,14 +256,11 @@ class Confluence():
             space {str} -- The Confluence space where the page should reside
             title {str} -- The page title
             ancestor_id {str} -- The ID of the parent Confluence page
-            slug {str} -- The unique slug for the page
-            tags {list(str)} -- The list of tags for the page
             attachments {list(str)} -- List of absolute paths to attachments
                 which should uploaded.
         """
         self._require_kwargs({
             'content': content,
-            'slug': slug,
             'title': title,
             'space': space
         })
@@ -333,8 +285,6 @@ class Confluence():
                            space=space,
                            title=title,
                            ancestor_id=ancestor_id,
-                           slug=slug,
-                           tags=tags,
                            page=response,
                            attachments=attachments)
 
@@ -344,8 +294,6 @@ class Confluence():
                space=None,
                title=None,
                ancestor_id=None,
-               slug=None,
-               tags=None,
                attachments=None,
                page=None,
                type='page'):
@@ -360,14 +308,11 @@ class Confluence():
             space {str} -- The Confluence space where the page should reside
             title {str} -- The page title
             ancestor_id {str} -- The ID of the parent Confluence page
-            slug {str} -- The unique slug for the page
-            tags {list(str)} -- The list of tags for the page
             attachments {list(str)} -- The list of absolute file paths to any
                 attachments which should be uploaded
         """
         self._require_kwargs({
             'content': content,
-            'slug': slug,
             'title': title,
             'post_id': post_id,
             'space': space
@@ -399,9 +344,5 @@ class Confluence():
         print(response)
 
         page_url = urljoin(self.api_url, response['_links']['webui'])
-
-        # Finally, we can update the labels on the page
-        self.create_labels(page_id=post_id, slug=slug, tags=tags)
-
         log.info('Page "{title}" (id {page_id}) updated successfully at {url}'.
                  format(title=title, page_id=post_id, url=page_url))
