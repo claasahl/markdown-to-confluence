@@ -18,24 +18,6 @@ log = logging.getLogger(__name__)
 SUPPORTED_FORMATS = ['.md']
 
 
-def get_environ_headers(prefix):
-    """Returns a list of headers read from environment variables whose key
-    starts with prefix.
-
-    The header names are derived from the environment variable keys by
-    stripping the prefix. The header values are set to the environment
-    variable values.
-
-    Arguments:
-        prefix {str} -- The prefix of the environment variable keys which specify headers.
-    """
-    headers = []
-    for key, value in os.environ.items():
-        if key.startswith(prefix):
-            header_name = key[len(prefix):]
-            headers.append("{}:{}".format(header_name, value))
-    return headers
-
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -125,7 +107,7 @@ def deploy_file(post_path, args, confluence):
     # Normalize the content into whatever format Confluence expects
     html, attachments = convtoconf(markdown)
 
-    static_path = os.path.join(args.git, 'static')
+    static_path = os.path.join('.', 'static')
     for i, attachment in enumerate(attachments):
         attachments[i] = os.path.join(static_path, attachment.lstrip('/'))
 
@@ -157,9 +139,7 @@ def main():
 
     confluence = Confluence(api_url=args.api_url,
                             username=args.username,
-                            password=args.password,
-                            headers=args.headers,
-                            dry_run=args.dry_run)
+                            password=args.password)
 
     changed_posts = [os.path.abspath(post) for post in args.posts]
     for post_path in changed_posts:

@@ -9,4 +9,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD python ./markdown-to-confluence.py --api_url https://scriveab.atlassian.net/wiki/rest/api/ ./git/README.md
+CMD python ./markdown-to-confluence.py --api_url https://scriveab.atlassian.net/wiki/rest/api/ --title "some title" ./git/README.md

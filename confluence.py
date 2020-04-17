@@ -28,17 +28,13 @@ class Confluence():
                  api_url=None,
                  username=None,
                  password=None,
-                 headers=None,
-                 dry_run=False,
                  _client=None):
         """Creates a new Confluence API client.
-        
+
         Arguments:
             api_url {str} -- The URL to the Confluence API root (e.g. https://wiki.example.com/api/rest/)
             username {str} -- The Confluence service account username
             password {str} -- The Confluence service account password
-            headers {list(str)} -- The HTTP headers which will be set for all requests
-            dry_run {str} -- The Confluence service account password
         """
         # A common gotcha will be given a URL that doesn't end with a /, so we
         # can account for this
@@ -48,23 +44,16 @@ class Confluence():
 
         self.username = username
         self.password = password
-        self.dry_run = dry_run
 
         if _client is None:
             _client = requests.Session()
 
         self._session = _client
         self._session.auth = (self.username, self.password)
-        for header in headers or []:
-            try:
-                name, value = header.split(':', 1)
-            except ValueError:
-                name, value = header, ''
-            self._session.headers[name] = value.lstrip()
 
     def _require_kwargs(self, kwargs):
         """Ensures that certain kwargs have been provided
-        
+
         Arguments:
             kwargs {dict} -- The dict of required kwargs
         """
@@ -80,12 +69,10 @@ class Confluence():
                  path='',
                  params=None,
                  files=None,
-                 data=None,
-                 headers=None):
+                 data=None):
         url = urljoin(self.api_url, path)
 
-        if not headers:
-            headers = {}
+        headers = {}
         headers.update(API_HEADERS)
 
         if files:
@@ -93,18 +80,6 @@ class Confluence():
 
         if data:
             headers.update({'Content-Type': 'application/json'})
-
-        if self.dry_run:
-            log.info('''{method} {url}:
-            Params: {params}
-            Data: {data}
-            Files: {files}'''.format(method=method,
-                                     url=url,
-                                     params=params,
-                                     data=data,
-                                     files=files))
-            if method != 'GET':
-                return {}
 
         response = self._session.request(method=method,
                                          url=url,
@@ -149,7 +124,7 @@ class Confluence():
         Specifically, this leverages a Confluence Query Language (CQL) query
         against the Confluence API. We assume that each title is unique, at
         least to the provided space/ancestor_id.
-        
+
         Arguments:
             space {str} -- The Confluence space to use for filtering posts
             title {str} -- The page title
@@ -159,7 +134,7 @@ class Confluence():
 
         cql_args = []
         if title:
-            cql_args.append('title={}'.format(title))
+            cql_args.append('title={!r}'.format(title))
         if ancestor_id:
             cql_args.append('ancestor={}'.format(ancestor_id))
         if space:
@@ -199,7 +174,7 @@ class Confluence():
 
     def get_attachments(self, post_id):
         """Gets the attachments for a particular Confluence post
-        
+
         Arguments:
             post_id {str} -- The Confluence post ID
         """
@@ -208,7 +183,7 @@ class Confluence():
 
     def upload_attachment(self, post_id=None, attachment_path=None):
         """Uploads an attachment to a Confluence post
-        
+
         Keyword Arguments:
             post_id {str} -- The Confluence post ID
             attachment_path {str} -- The absolute path to the attachment
@@ -250,7 +225,7 @@ class Confluence():
 
         If an ancestor_id is specified, then the page will be created as a
         child of that ancestor page.
-        
+
         Keyword Arguments:
             content {str} -- The HTML content to upload (required)
             space {str} -- The Confluence space where the page should reside
@@ -301,7 +276,7 @@ class Confluence():
 
         This involves updating the attachments stored on Confluence, uploading
         the page content, and finally updating the labels.
-        
+
         Keyword Arguments:
             post_id {str} -- The ID of the Confluence post
             content {str} -- The page represented in Confluence storage format
